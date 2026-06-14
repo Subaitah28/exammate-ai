@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ExamMate AI</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="logo-wrap">
+      <div class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path d="M11 2L13.5 7.5H19L14.5 11L16.5 17L11 13.5L5.5 17L7.5 11L3 7.5H8.5L11 2Z" fill="#00ff88" stroke="#00ff88" stroke-width="0.5"/>
+        </svg>
+      </div>
+      <span class="logo-text">ExamMate <span class="logo-ai">AI</span></span>
+    </div>
+    <div class="header-right">
+      <div class="usage-badge" id="usageBadge" title="Daily AI requests used">
+        <span id="usageCount">0</span><span class="usage-sep">/</span><span>15</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== SELECTED TEXT PREVIEW ===== -->
+  <section class="text-section">
+    <label class="section-label">
+      <span class="label-dot"></span> Selected Text
+    </label>
+    <div class="text-preview-wrapper">
+      <textarea
+        id="selectedText"
+        class="text-preview"
+        placeholder="Select text on any page, or paste it here to get started…"
+        rows="4"
+      ></textarea>
+      <div class="char-counter"><span id="charCount">0</span> / 5000</div>
+    </div>
+  </section>
+
+  <!-- ===== AI ACTIONS ===== -->
+  <section class="actions-section">
+    <label class="section-label">
+      <span class="label-dot"></span> AI Tools
+    </label>
+    <div class="action-grid">
+      <button class="action-btn" id="btnNotes" data-action="notes">
+        <span class="btn-icon">📝</span>
+        <span class="btn-label">Study Notes</span>
+        <span class="btn-sub">Structured bullets</span>
+      </button>
+      <button class="action-btn" id="btnKeyPoints" data-action="keypoints">
+        <span class="btn-icon">🎯</span>
+        <span class="btn-label">Key Points</span>
+        <span class="btn-sub">Exam-focused</span>
+      </button>
+      <button class="action-btn" id="btnSimplify" data-action="simplify">
+        <span class="btn-icon">💡</span>
+        <span class="btn-label">Simplify</span>
+        <span class="btn-sub">Easy language</span>
+      </button>
+      <button class="action-btn" id="btnQuestions" data-action="questions">
+        <span class="btn-icon">❓</span>
+        <span class="btn-label">Questions</span>
+        <span class="btn-sub">Practice MCQs</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== OUTPUT ===== -->
+  <section class="output-section" id="outputSection">
+    <div class="output-header">
+      <label class="section-label" id="outputLabel">
+        <span class="label-dot neon"></span> Result
+      </label>
+      <div class="output-actions">
+        <button class="icon-btn" id="btnCopy" title="Copy to clipboard">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+        <button class="icon-btn save-btn" id="btnSave" title="Download as .txt">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Save .txt
+        </button>
+      </div>
+    </div>
+    <div class="output-box" id="outputBox">
+      <div class="output-placeholder">
+        <div class="placeholder-icon">⚡</div>
+        <p>Your AI-generated content will appear here.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== LOADING ===== -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+      <div class="spinner-ring"></div>
+      <p class="loading-text" id="loadingText">Generating study notes…</p>
+    </div>
+  </div>
+
+  <!-- ===== ERROR TOAST ===== -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ===== DIVIDER ===== -->
+  <div class="section-divider">
+    <span>Focus Timer</span>
+  </div>
+
+  <!-- ===== POMODORO TIMER ===== -->
+  <section class="timer-section">
+    <div class="timer-mode-tabs">
+      <button class="tab-btn active" id="tabWork" data-mode="work">Work · 25m</button>
+      <button class="tab-btn" id="tabBreak" data-mode="break">Break · 5m</button>
+    </div>
+
+    <div class="timer-display">
+      <svg class="timer-ring" viewBox="0 0 120 120">
+        <circle class="ring-bg" cx="60" cy="60" r="52"/>
+        <circle class="ring-progress" id="ringProgress" cx="60" cy="60" r="52"/>
+      </svg>
+      <div class="timer-inner">
+        <span class="timer-time" id="timerDisplay">25:00</span>
+        <span class="timer-label" id="timerLabel">FOCUS</span>
+      </div>
+    </div>
+
+    <div class="timer-controls">
+      <button class="timer-btn reset-btn" id="btnReset" title="Reset">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+      </button>
+      <button class="timer-btn play-btn" id="btnPlayPause">
+        <svg id="iconPlay" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <svg id="iconPause" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      </button>
+      <button class="timer-btn skip-btn" id="btnSkip" title="Skip to next">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="5 17 12 12 5 7"/><line x1="19" y1="7" x2="19" y2="17"/></svg>
+      </button>
+    </div>
+
+    <div class="session-count">
+      <span id="sessionCount">0</span> sessions completed today
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    ExamMate AI · MVP v1.0 · Built for students
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
