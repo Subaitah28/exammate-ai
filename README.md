@@ -33,7 +33,7 @@ This project is currently in MVP stage, focused on delivering a fast and reliabl
 ![Main UI](screenshots/1-main-ui-01.png.png)
 
 ### Study Notes
-![Study Notes](screenshots/02-study-notes-01.png)
+![Study Notes](screenshots/2-study_notes-01.png.png)
 
 ### Simplify
 ![Simplify](screenshots/03-simplify.png)
