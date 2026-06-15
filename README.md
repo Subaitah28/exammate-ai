@@ -36,16 +36,16 @@ This project is currently in MVP stage, focused on delivering a fast and reliabl
 ![Study Notes](screenshots/2-study_notes-01.png.png)
 
 ### Simplify
-![Simplify](screenshots/03-simplify.png)
+![Simplify](screenshots/3-simplify.png.png)
 
 ### Key Points
-![Key Points](screenshots/04-key-points-01.png)
+![Key Points](screenshots/4-key_points-01.png.png)
 
 ### Questions
-![Questions](screenshots/05-questions-01.png)
+![Questions](screenshots/5-question-01.png.png)
 
 ### Pomodoro Timer
-![Pomodoro](screenshots/06-pomodoro-01.png)
+![Pomodoro](screenshots/6-pomodoro-01.png.png)
 
 ## Features
 
