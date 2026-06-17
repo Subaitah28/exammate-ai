@@ -309,7 +309,101 @@ Each of the four modes sends a different prompt to Gemini, but all prompts share
 The timer runs entirely in `popup.js`. Work and break durations, session count, and mode state are managed in JavaScript variables. Session counts are persisted to `chrome.storage.local` so they survive the popup being closed and reopened. The visual ring is an SVG circle with `stroke-dashoffset` animated via JavaScript on each tick.
 
 ---
+Project Evolution
 
+This project went through three distinct phases, each driven by a specific technical or product problem rather than a planned roadmap. The progression reflects how the project was actually built — security and reliability issues surfaced after the initial version worked, and were fixed in the order they were discovered.
+
+V1 — Initial MVP
+
+The first working version focused on proving the core idea: select text on any webpage, send it to an AI model, get back something useful for studying.
+
+What was built:
+
+
+Manifest V3 Chrome extension scaffold — popup.html, popup.js, background.js, content.js
+Direct integration with the Gemini 2.5 Flash API, called from background.js
+Four AI modes: Study Notes, Key Points, Simplify, Practice Questions
+Text selection capture using chrome.scripting.executeScript to read window.getSelection() from the active tab
+Basic dark-themed popup UI
+
+
+Known issue at this stage: The Gemini API key was stored directly as a constant in background.js. This is the standard approach for local development and testing, but it is not viable for any extension that will be distributed, because extension source files are readable by anyone who installs the package.
+
+V2 — Security and Backend Migration
+
+Before considering any kind of public distribution, the API key exposure had to be fixed. This phase was entirely about infrastructure, not features.
+
+What was built:
+
+
+A separate backend proxy deployed on Vercel (api/generate.js), which holds the Gemini API key as a server-side environment variable
+Updated background.js to call the Vercel proxy instead of the Gemini API directly
+CORS handling on the proxy to allow requests from the extension
+Updated manifest.json host_permissions to match the new proxy domain
+
+
+Problems solved during this phase:
+
+
+API key exposure — resolved by moving all API calls server-side; the key never ships inside the extension package
+Vercel cold starts — the free tier spins down idle functions, which initially caused requests to time out during testing; resolved by adding an AbortController with a 25-second timeout and one automatic retry
+CORS rejections — the proxy initially rejected requests from the extension's origin; resolved by explicitly setting Access-Control-Allow-Origin headers on the serverless function
+
+
+This phase took longer than expected. Backend deployment, environment variable configuration, and debugging cross-origin request failures were unfamiliar territory, and most of the debugging time went into understanding why requests were failing rather than writing new code.
+
+V3 — Reliability, Output Quality, and Stability
+
+With the security foundation in place, this phase addressed two separate problems that emerged from continued testing: the extension was becoming unreliable under repeated use, and the AI output — while functional — wasn't actually good for studying.
+
+Reliability fixes:
+
+
+MV3 service worker termination — Chrome terminates idle service workers after roughly 30 seconds, which caused chrome.runtime.sendMessage calls to fail with "Could not establish connection" and no visible error to the user. Fixed with a safeSendMessage wrapper in popup.js that detects this specific error, waits for the worker to restart, and retries once automatically.
+Empty AI responses — Gemini returns HTTP 200 with no usable text under several conditions (safety filter blocks, content truncation, occasional malformed candidates). The original error handling treated all of these identically as a generic failure. Rewrote the response parser in background.js to inspect finishReason and surface a specific, actionable message for each case, with one automatic retry for ambiguous failures.
+Download failures in MV3 — the original download implementation used Blob and URL.createObjectURL() inside the service worker, which silently fails because MV3 service workers have no DOM access. Moved all download logic to popup.js, which runs in a proper browser page context.
+
+
+Output quality fixes:
+
+
+Rewrote all four prompt templates after observing that the model's default output was too long and too inconsistent in structure to be useful for fast revision — closer to a textbook explanation than a study aid
+Added explicit negative constraints to the prompts (no markdown symbols, no preambles, no summaries) after early outputs were cluttered with **bold** and ## headings that didn't render usefully in a plain-text popup
+Enforced strict per-mode templates (numbered key points capped at 5, simplify capped at ~50 words, structured Q&A format for practice questions) to produce consistent, scannable output instead of free-form AI writing
+Built a pattern-matching renderer in popup.js that detects line types (section headers, numbered points, MCQ options, answers) in the plain-text output and applies visual styling programmatically, rather than relying on the AI to format for a display it has no knowledge of
+
+
+Other additions in this phase:
+
+
+Pomodoro focus timer (25-minute work / 5-minute break cycles) with an animated SVG progress ring and persisted daily session counts
+Copy-to-clipboard and save-as-.txt functionality, with the save feature rebuilt to work correctly under MV3's DOM restrictions
+
+
+By the end of V3, the extension reached a stable point: AI calls failed gracefully with clear error messages instead of silently, downloads worked reliably, and output was short enough and consistent enough to actually function as revision material rather than reading material.
+_
+
+## Early User Feedback
+
+ExamMate AI is currently being tested by a small group of friends and classmates before wider release.
+
+Initial feedback highlighted several areas for improvement:
+
+- Generated notes were sometimes too long for quick revision.
+- Formatting was not always consistent across outputs.
+- Key Points was the most frequently used feature.
+- Users preferred concise, exam-focused content rather than detailed explanations.
+
+### Changes Made
+
+Based on this feedback:
+
+- Redesigned prompts to reduce output length.
+- Improved note structure and formatting consistency.
+- Refined Key Points generation for faster scanning.
+- Updated question-generation prompts to better match exam-style practice.
+
+Testing and iteration are ongoing as additional feedback is collected.
 ## Engineering Challenges
 
 ### MV3 Service Worker Lifecycle
